@@ -67,8 +67,9 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
     return db_expense
 
 @app.get("/expenses/", response_model=list[schemas.Expense])
-def read_expenses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    expenses = db.query(models.Expense).offset(skip).limit(limit).all()
+def read_expenses(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    # THE PRIVACY FILTER: .filter(models.Expense.user_id == user_id)
+    expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).offset(skip).limit(limit).all()
     return expenses
 
 @app.post("/expenses/sms/", response_model=schemas.Expense)
