@@ -8,11 +8,13 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     name = Column(String)
+    min_balance = Column(Float, default=1000)
 
 class Expense(Base):
     __tablename__ = "expenses"
 
     id = Column(Integer, primary_key=True, index=True)
+    type = Column(String, index=True, default="expense")
     amount = Column(Float, nullable=False)
     category = Column(String, index=True)
     description = Column(String)

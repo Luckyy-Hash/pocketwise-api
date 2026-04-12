@@ -102,3 +102,48 @@ def parse_and_save_sms(payload: schemas.SMSPayload, db: Session = Depends(get_db
     db.refresh(db_expense)
     
     return db_expense
+
+# --- BUDGETS ---
+@app.post("/budgets/", response_model=schemas.Budget)
+def update_budget(budget: schemas.BudgetCreate, db: Session = Depends(get_db)):
+    # Check if budget for this category exists
+    existing = db.query(models.Budget).filter(
+        models.Budget.user_id == budget.user_id,
+        models.Budget.category == budget.category
+    ).first()
+
+    if existing:
+        existing.limit_amount = budget.limit_amount
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        db_budget = models.Budget(**budget.model_dump())
+        db.add(db_budget)
+        db.commit()
+        db.refresh(db_budget)
+        return db_budget
+
+@app.get("/budgets/", response_model=list[schemas.Budget])
+def read_budgets(user_id: int, db: Session = Depends(get_db)):
+    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).all()
+    return budgets
+
+# --- SETTINGS ---
+@app.put("/users/settings", response_model=schemas.UserSettings)
+def update_settings(settings: schemas.UserSettings, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == settings.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.min_balance = settings.min_balance
+    db.commit()
+    db.refresh(user)
+    return {"user_id": user.id, "min_balance": user.min_balance}
+
+@app.get("/users/{user_id}/settings", response_model=schemas.UserSettings)
+def get_settings(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"user_id": user.id, "min_balance": user.min_balance}

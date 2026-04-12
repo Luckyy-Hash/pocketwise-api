@@ -4,6 +4,7 @@ from typing import Optional
 
 # Base properties for an Expense
 class ExpenseBase(BaseModel):
+    type: str # 'income' or 'expense'
     amount: float
     category: str
     description: Optional[str] = None
@@ -29,3 +30,21 @@ class Token(BaseModel):
 class SMSPayload(BaseModel):
     raw_text: str
     user_id: int
+
+class UserSettings(BaseModel):
+    user_id: int
+    min_balance: float
+
+class BudgetBase(BaseModel):
+    category: str
+    limit_amount: float
+
+class BudgetCreate(BudgetBase):
+    user_id: int
+
+class Budget(BudgetBase):
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
