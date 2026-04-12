@@ -21,3 +21,11 @@ class Expense(ExpenseBase):
 
     class Config:
         from_attributes = True # Allows Pydantic to read SQLAlchemy models
+
+class Token(BaseModel):
+    credential: str
+
+# The raw SMS payload we expect to receive
+class SMSPayload(BaseModel):
+    raw_text: str
+    user_id: int

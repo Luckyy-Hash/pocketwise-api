@@ -2,15 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-# NOTE: Replace this string with your actual Render Database URL when deploying.
-# For local testing right now, we will use a lightweight SQLite database.
-SQLALCHEMY_DATABASE_URL = "sqlite:///./pocketwise.db"
-# Example of a Render Postgres URL: "postgresql://user:password@hostname/dbname"
+SQLALCHEMY_DATABASE_URL = "postgresql://pocketwise_db_user:qrQ8eIX0dP1Eo9g1w8CHqQCBs2fXT84Y@dpg-d7e1nscvikkc73efjq7g-a.oregon-postgres.render.com/pocketwise_db"
 
-# The connect_args dictionary is only needed for SQLite. Remove it when switching to Postgres.
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
