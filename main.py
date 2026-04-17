@@ -75,21 +75,27 @@ def read_expenses(user_id: int, skip: int = 0, limit: int = 100, db: Session = D
 @app.post("/expenses/sms/", response_model=schemas.Expense)
 def parse_and_save_sms(payload: schemas.SMSPayload, db: Session = Depends(get_db)):
     # 1. The Regex Hunt for the Amount
-    # Looks for "Rs.", "INR", or "₹" followed by numbers and optional decimals
-    amount_match = re.search(r'(?i)(?:rs\.?|inr|₹)\s*(\d+(?:\.\d{1,2})?)', payload.raw_text)
+    # Now handles: "Rs.1,000.50", "Rs.100.99", "Rs. 500", etc.
+    # Matches numbers with optional commas and 0-3 decimal places
+    amount_match = re.search(r'(?i)(?:rs\.?|inr|₹)\s*([0-9,]+(?:\.\d{1,3})?)', payload.raw_text)
     
     if not amount_match:
         raise HTTPException(status_code=400, detail="Could not detect a valid amount in the SMS")
     
-    extracted_amount = float(amount_match.group(1))
+    # Remove commas and convert to float
+    amount_str = amount_match.group(1).replace(',', '')
+    extracted_amount = float(amount_str)
 
     # 2. Determine if it's a debit (expense) or credit (income)
-    # For now, we will focus on routing debits to expenses
-    if "credited" in payload.raw_text.lower():
-        raise HTTPException(status_code=400, detail="This looks like income, not an expense.")
+    text_lower = payload.raw_text.lower()
+    if "credited" in text_lower or "received" in text_lower or "added" in text_lower:
+        transaction_type = "income"
+    else:
+        transaction_type = "expense"
 
     # 3. Save the auto-parsed data to the database
     db_expense = models.Expense(
+        type=transaction_type,
         amount=extracted_amount,
         category="Other", # Default category for SMS
         description=f"Auto-parsed SMS",
